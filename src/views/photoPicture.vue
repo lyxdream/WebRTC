@@ -45,42 +45,7 @@ const state = reactive({
   } as MediaStreamConstraints
 })
 
-const imgData = ref('')
 const imgList = ref<string[]>([])
-// 切换前后摄像头
-function switchCamera(val: number) {
-  state.constraints.video = {
-    // 强制切换前后摄像头
-    facingMode: { exact: val === 1 ? 'user' : 'environment' }
-    // 也可以这样当前后摄像头不支持切换时，会继续使用当前摄像头，好处是不会报错
-    // facingMode: val === 1 ? 'user' : 'environment',
-  }
-
-  navigator.mediaDevices
-    .getUserMedia(state.constraints)
-    .then((stream) => {
-      console.log('切换成功')
-      playLocalStream(stream)
-    })
-    .catch((err) => {
-      console.log('你的设备不支持切换前后摄像头')
-    })
-}
-
-// 切换设备
-function handleDeviceChange(deviceId: string) {
-  state.constraints.video = {
-    deviceId: { exact: deviceId }
-  }
-  getLocalStream()
-}
-
-// 获取当前的设备ID
-const getDevicesId = () => {
-  const videoEl = document.getElementById('localVideo') as any
-  const currentDeviceId = videoEl!.srcObject.getVideoTracks()[0].getSettings().deviceId
-  // console.log('🚀🚀🚀 / currentDeviceId', currentDeviceId)
-}
 
 // 获取所有音视频设备
 async function getDevices() {
@@ -118,13 +83,14 @@ function takePhoto() {
   }
 }
 
+// 添加滤镜之后的图片
 const imgUrl = computed(() => {
   return (item: any) => {
     return imgList.value.length !== 0 ? item : createAvatar(item)
   }
 })
 
-//照片列表
+//滤镜照片列表
 const photoList = computed(() => {
   return imgList.value.length !== 0 ? imgList.value : 11
 })
@@ -133,6 +99,7 @@ function handleError(error: Error) {
   Error('error: ', error)
 }
 
+//创建头像
 function createAvatar(val: any) {
   const blob = new Blob([multiavatar(val + new Date().getTime())], {
     type: 'image/svg+xml;charset=utf-8'
@@ -140,17 +107,55 @@ function createAvatar(val: any) {
   const link = URL.createObjectURL(blob)
   return link
 }
+
+// tab类型
 const TAB_TYPE = {
   MODE: 1,
   FILTER: 2
 }
+//当前tab的类型
 const tabType = ref(TAB_TYPE.MODE)
+//选择滤镜
 const selectFilter = () => {
   tabType.value = TAB_TYPE.FILTER
 }
+// 重新拍照
 const againPhoto = () => {}
+//选择模式
 const selectMode = () => {
   tabType.value = TAB_TYPE.MODE
+}
+// 切换前后摄像头
+function switchCamera(val: number) {
+  console.log(val, '==val')
+  state.constraints.video = {
+    // 强制切换前后摄像头     // 也可以这样当前后摄像头不支持切换时，会继续使用当前摄像头，好处是不会报错
+    facingMode: { exact: val === 1 ? 'user' : 'environment' }
+  }
+  navigator.mediaDevices
+    .getUserMedia(state.constraints)
+    .then((stream) => {
+      console.log('切换成功')
+      playLocalStream(stream)
+    })
+    .catch((err) => {
+      console.log('你的设备不支持切换前后摄像头')
+    })
+}
+
+// 切换设备
+function handleDeviceChange(deviceId: string) {
+  state.constraints.video = {
+    deviceId: { exact: deviceId }
+  }
+  getLocalStream()
+}
+
+// 获取当前的设备ID
+const getDevicesId = () => {
+  const videoEl = document.getElementById('localVideo') as any
+  const currentDeviceId = videoEl!.srcObject.getVideoTracks()[0].getSettings().deviceId
+  console.log('🚀🚀🚀 / currentDeviceId', currentDeviceId)
 }
 
 onMounted(() => {
@@ -166,17 +171,19 @@ onMounted(() => {
 <template>
   <div class="webrtc-container">
     <div class="devices-wrap__content">
-      <video class="localVideo" id="localVideo" autoplay playsinline muted></video>
+      <div class="localVideo__box">
+        <video class="localVideo" id="localVideo" autoplay playsinline muted></video>
+        <div class="model__icon" @click="selectMode"></div>
+      </div>
       <div class="devices-wrap__content__control">
         <div class="back__icon" @click="againPhoto"></div>
         <div class="photo__icon" @click="takePhoto"></div>
         <div class="filter__icon" @click="selectFilter"></div>
-        <div class="mode__icon" @click="selectMode"></div>
       </div>
       <div class="select__wrap">
         <!-- 模式 -->
         <div class="mode-select__wrap" v-if="tabType === TAB_TYPE.MODE">
-          <el-form :model="formParams.data" :inline="formParams.inline" label-width="120px">
+          <el-form :model="formParams.data" :inline="formParams.inline" label-width="80px">
             <el-form-item
               v-for="(itemForm, key) in formParams.formList"
               :key="key"
@@ -226,9 +233,24 @@ onMounted(() => {
     width: 100%;
     height: 100%;
     background-color: #fff;
+    .localVideo__box {
+      width: 326px;
+      height: 250px;
+      box-sizing: border-box;
+      position: relative;
+      .model__icon {
+        width: 30px;
+        height: 30px;
+        background: url('./../assets/photoPicture/mode_icon.png') no-repeat center;
+        background-size: 100% auto;
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+      }
+    }
     .localVideo {
       width: 326px;
-      max-height: 250px;
+      height: 250px;
     }
     .devices-wrap__content__control {
       display: flex;
@@ -257,6 +279,7 @@ onMounted(() => {
       }
     }
     .select__wrap {
+      padding-top: 20px;
       height: 230px;
       overflow-y: auto;
       border-top: 2px solid #fd973f;
