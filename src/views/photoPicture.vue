@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import multiavatar from '@multiavatar/multiavatar/esm'
-import { FILTER_LIST } from './../constants/photoPicture.js'
+import { FILTER_LIST, TAB_TYPE, PHOTO_STATUS } from '../constants/photoPicture.js'
 
 const formParams = reactive({
   data: {
     videoInput: '',
-    directionType: ''
+    directionType: 1
   }, // 表单数据对象
   formList: {
     videoInput: {
@@ -46,6 +46,29 @@ const state = reactive({
 })
 
 const imgList = ref<string[]>([])
+//拍照之后得原图
+const originalImg = ref('')
+//当前tab的类型
+const tabType = ref(TAB_TYPE.MODE)
+//拍照的状态
+const photoStatus = ref(PHOTO_STATUS.YES)
+
+// 添加滤镜之后的图片
+const imgUrl = computed(() => {
+  return (item: any) => {
+    return imgList.value.length !== 0 ? item : createAvatar(item)
+  }
+})
+
+//滤镜照片列表
+const photoList = computed(() => {
+  return imgList.value.length !== 0 ? imgList.value : 11
+})
+
+//拍照中
+const isTakePhoto = computed(() => {
+  return photoStatus.value == PHOTO_STATUS.YES
+})
 
 // 获取所有音视频设备
 async function getDevices() {
@@ -62,41 +85,17 @@ async function getLocalStream(options: MediaStreamConstraints = state.constraint
 // 播放本地视频流
 function playLocalStream(stream: MediaStream) {
   const videoEl = document.getElementById('localVideo') as HTMLVideoElement
-  videoEl.srcObject = stream
-  videoEl.addEventListener('loadedmetadata', () => {})
-}
-
-// 拍照
-function takePhoto() {
-  const videoEl = document.getElementById('localVideo') as HTMLVideoElement
-  const canvas = document.createElement('canvas')
-  canvas.width = videoEl.videoWidth
-  canvas.height = videoEl.videoHeight
-  const ctx = canvas.getContext('2d')!
-  ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height)
-  // imgList.value.push(canvas.toDataURL('image/png'))
-  for (let i = 0; i < FILTER_LIST.length; i++) {
-    // 添加滤镜
-    ctx.filter = FILTER_LIST[i]
-    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height)
-    imgList.value.push(canvas.toDataURL('image/png'))
+  // 旧的浏览器可能没有 srcObject
+  if ('srcObject' in videoEl) {
+    videoEl.srcObject = stream
+  } else {
+    // 防止在新的浏览器里使用它，应为它已经不再支持了
+    videoEl.src = window.URL.createObjectURL(stream)
   }
-}
-
-// 添加滤镜之后的图片
-const imgUrl = computed(() => {
-  return (item: any) => {
-    return imgList.value.length !== 0 ? item : createAvatar(item)
-  }
-})
-
-//滤镜照片列表
-const photoList = computed(() => {
-  return imgList.value.length !== 0 ? imgList.value : 11
-})
-
-function handleError(error: Error) {
-  Error('error: ', error)
+  // 当指定的音频/视频的元数据已加载时，会发生 loadedmetadata 事件。
+  videoEl.addEventListener('loadedmetadata', () => {
+    getDevicesId()
+  })
 }
 
 //创建头像
@@ -108,26 +107,32 @@ function createAvatar(val: any) {
   return link
 }
 
-// tab类型
-const TAB_TYPE = {
-  MODE: 1,
-  FILTER: 2
-}
-//当前tab的类型
-const tabType = ref(TAB_TYPE.MODE)
 //选择滤镜
 const selectFilter = () => {
   tabType.value = TAB_TYPE.FILTER
 }
+
+//修改滤镜
+const changeFilter = (item: string) => {
+  originalImg.value = item
+}
+
 // 重新拍照
-const againPhoto = () => {}
+const againPhoto = () => {
+  photoStatus.value = PHOTO_STATUS.YES
+  tabType.value = TAB_TYPE.MODE
+  imgList.value = []
+}
 //选择模式
 const selectMode = () => {
   tabType.value = TAB_TYPE.MODE
+  const { directionType } = formParams.data
+  formParams.data.directionType = directionType === 1 ? 2 : 1
+  switchCamera(formParams.data.directionType)
 }
+
 // 切换前后摄像头
 function switchCamera(val: number) {
-  console.log(val, '==val')
   state.constraints.video = {
     // 强制切换前后摄像头     // 也可以这样当前后摄像头不支持切换时，会继续使用当前摄像头，好处是不会报错
     facingMode: { exact: val === 1 ? 'user' : 'environment' }
@@ -144,17 +149,53 @@ function switchCamera(val: number) {
 }
 
 // 切换设备
-function handleDeviceChange(deviceId: string) {
+const handleDeviceChange = (deviceId: string) => {
   state.constraints.video = {
     deviceId: { exact: deviceId }
   }
   getLocalStream()
 }
 
+// 拍照
+const takePhoto = () => {
+  photoStatus.value = PHOTO_STATUS.NO
+  const videoEl = document.getElementById('localVideo') as HTMLVideoElement
+  const canvas = document.createElement('canvas')
+  canvas.width = videoEl.videoWidth
+  canvas.height = videoEl.videoHeight
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height)
+  originalImg.value = canvas.toDataURL('image/png')
+  for (let i = 0; i < FILTER_LIST.length; i++) {
+    // 添加滤镜
+    ctx.filter = FILTER_LIST[i]
+    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height)
+    imgList.value.push(canvas.toDataURL('image/png'))
+  }
+  tabType.value = TAB_TYPE.FILTER //切换到滤镜
+}
+
+//保存图片
+const savePhoto = () => {
+  handleDownload() //下载
+  tabType.value = TAB_TYPE.MODE
+}
+
+//下载
+const handleDownload = () => {
+  const url = originalImg.value
+  const a = document.createElement('a')
+  a.href = url
+  a.style.display = 'none'
+  a.download = `照片_${Date.now()}.png`
+  a.click()
+}
+
 // 获取当前的设备ID
 const getDevicesId = () => {
   const videoEl = document.getElementById('localVideo') as any
   const currentDeviceId = videoEl!.srcObject.getVideoTracks()[0].getSettings().deviceId
+  formParams.data.videoInput = currentDeviceId
   console.log('🚀🚀🚀 / currentDeviceId', currentDeviceId)
 }
 
@@ -162,9 +203,8 @@ onMounted(() => {
   getDevices()
   getLocalStream({
     audio: false,
-    video: true
-    // video: { facingMode: { exact: 'environment' } },
-    // video: { facingMode: { exact: 'user' } },
+    // 强制使用前摄像头
+    video: { facingMode: { exact: 'user' } }
   })
 })
 </script>
@@ -172,13 +212,22 @@ onMounted(() => {
   <div class="webrtc-container">
     <div class="devices-wrap__content">
       <div class="localVideo__box">
-        <video class="localVideo" id="localVideo" autoplay playsinline muted></video>
-        <div class="model__icon" @click="selectMode"></div>
+        <video
+          class="localVideo"
+          v-show="isTakePhoto"
+          id="localVideo"
+          autoplay
+          playsinline
+          muted
+        ></video>
+        <div class="model__icon" v-show="isTakePhoto" @click="selectMode"></div>
+        <img class="original-img" v-show="!isTakePhoto" :src="originalImg" alt="" />
       </div>
       <div class="devices-wrap__content__control">
-        <div class="back__icon" @click="againPhoto"></div>
-        <div class="photo__icon" @click="takePhoto"></div>
-        <div class="filter__icon" @click="selectFilter"></div>
+        <div class="photo__icon" v-show="isTakePhoto" @click="takePhoto"></div>
+        <div class="back__icon" v-show="!isTakePhoto" @click="againPhoto"></div>
+        <div class="save__photo" v-show="!isTakePhoto" @click="savePhoto"></div>
+        <div class="filter__icon" v-show="!isTakePhoto" @click="selectFilter"></div>
       </div>
       <div class="select__wrap">
         <!-- 模式 -->
@@ -209,7 +258,12 @@ onMounted(() => {
         </div>
         <!-- 滤镜 -->
         <div class="filter-select__wrap" v-if="tabType === TAB_TYPE.FILTER">
-          <div class="filter-select__wrap__item" v-for="item in photoList" :key="item">
+          <div
+            class="filter-select__wrap__item"
+            v-for="item in photoList"
+            :key="item"
+            @click="changeFilter(item)"
+          >
             <img :src="imgUrl(item)" alt="" />
           </div>
         </div>
@@ -252,6 +306,10 @@ onMounted(() => {
       width: 326px;
       height: 250px;
     }
+    .original-img {
+      width: 326px;
+      height: 250px;
+    }
     .devices-wrap__content__control {
       display: flex;
       justify-content: center;
@@ -276,6 +334,13 @@ onMounted(() => {
         height: 40px;
         background: url('./../assets/photoPicture/filter_icon.png') no-repeat center;
         background-size: 100% auto;
+      }
+      .save__photo {
+        width: 64px;
+        height: 64px;
+        background: url('./../assets/photoPicture/save_icon.png') no-repeat center;
+        background-size: 100% auto;
+        margin-right: 20px;
       }
     }
     .select__wrap {

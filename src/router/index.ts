@@ -4,14 +4,14 @@ import Record from '../views/Record.vue'
 import RecordCanvas from '../views/RecordCanvas.vue'
 import WebRTC from '../views/WebRTC.vue'
 import Recordhtml2canvas from '../views/Recordhtml2canvas.vue'
-import photoPicture from '../views/photoPicture.vue'
+import PhotoPicture from '../views/PhotoPicture.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
+      name: 'Home',
       component: HomeView
     },
     {
@@ -35,9 +35,9 @@ const router = createRouter({
       component: () => import('../views/Recordhtml2canvas.vue')
     },
     {
-      path: '/photoPicture',
-      name: 'photoPicture',
-      component: () => import('../views/photoPicture.vue')
+      path: '/PhotoPicture',
+      name: 'PhotoPicture',
+      component: () => import('../views/PhotoPicture.vue')
     }
   ]
 })

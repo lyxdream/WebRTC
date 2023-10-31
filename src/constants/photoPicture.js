@@ -13,3 +13,18 @@ export const FILTER_LIST = [
   'sepia(100%)', // 褐色
   'drop-shadow(4px 4px 8px blue)' // 阴影
 ]
+
+// tab类型
+export const TAB_TYPE = {
+  MODE: 1, //模式
+  FILTER: 2, //滤镜
+  SAVE: 3, //保存
+  PHOTOGRAPH: 4, //拍照
+  BACK: 5 //返回
+}
+
+// 是否拍照中状态
+export const PHOTO_STATUS = {
+  NO: 0,
+  YES: 1
+}
