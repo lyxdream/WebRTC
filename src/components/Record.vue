@@ -16,39 +16,55 @@
 </template>
 
 <script lang="ts" setup>
+import { RecordScreen } from './record'
 import { ref, reactive } from 'vue'
 const playerRef = ref()
-const DEFAULT_MIME_TYPE = 'video/webm; codecs=vp9' //默认的MIME格式
+// const DEFAULT_MIME_TYPE = 'video/webm; codecs=vp9' //默认的MIME格式
 const state = reactive({
   mediaRecorder: null as null | MediaRecorder,
   blobs: [] as Blob[]
 })
-const mimeType = (type: string) => {
-  return MediaRecorder.isTypeSupported(type) ? type : 'video/webm'
+const options = {
+  audio: false,
+  video: true
 }
+const recordScreen = new RecordScreen(state.mediaRecorder, {
+  blobs: state.blobs,
+  mediaOption: options
+})
+
+// const mimeType = (type: string) => {
+//   return MediaRecorder.isTypeSupported(type) ? type : 'video/webm'
+// }
 // 开始录制
 const handleStart = async () => {
-  try {
-    const stream: MediaStream = await navigator.mediaDevices.getDisplayMedia()
-    // 监听该媒体流中找到的第一个视轨的ended事件
-    stream.getVideoTracks()[0].addEventListener('ended', () => {
-      console.log('用户中断了屏幕共享~~~')
-    })
-    state.mediaRecorder = new MediaRecorder(stream, {
-      mimeType: mimeType(DEFAULT_MIME_TYPE)
-    })
-    state.mediaRecorder.addEventListener('dataavailable', (e: BlobEvent) => {
-      state.blobs.push(e.data)
-    })
-    // 500是每隔500ms进行一个保存数据
-    state.mediaRecorder?.start(500)
-  } catch (e) {
-    console.log(`屏幕共享失败->${e}`)
-  }
+  recordScreen.onStart()
+  // try {
+  //   const options = {
+  //     audio: false,
+  //     video: true
+  //   }
+  //   const stream: MediaStream = await navigator.mediaDevices.getDisplayMedia(options)
+  //   // 监听该媒体流中找到的第一个视轨的ended事件
+  //   stream.getVideoTracks()[0].addEventListener('ended', () => {
+  //     console.log('用户中断了屏幕共享~~~')
+  //   })
+  //   state.mediaRecorder = new MediaRecorder(stream, {
+  //     mimeType: mimeType(DEFAULT_MIME_TYPE)
+  //   })
+  //   state.mediaRecorder.addEventListener('dataavailable', (e: BlobEvent) => {
+  //     state.blobs.push(e.data)
+  //   })
+  //   // 500是每隔500ms进行一个保存数据
+  //   state.mediaRecorder?.start(500)
+  // } catch (e) {
+  //   console.log(`屏幕共享失败->${e}`)
+  // }
 }
 // 暂停录制
 const handlePause = () => {
-  state.mediaRecorder?.pause()
+  recordScreen.onPause(() => {})
+  // state.mediaRecorder?.pause()
 }
 // 继续录制
 const handleResume = () => {

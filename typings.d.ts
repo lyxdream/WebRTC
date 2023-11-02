@@ -13,3 +13,9 @@ declare module 'vue-router' {
 interface DynamicComponentProps {
   is: string | Component
 }
+
+export interface RecordScreenOptions {
+  mediaRecorder: MediaRecorder | null //当前录屏的媒体流
+  blobs: Blob[] //保存当前的媒体流
+  mimeType: string //MIME类型
+}
