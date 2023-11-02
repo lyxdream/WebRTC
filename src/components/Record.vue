@@ -1,6 +1,8 @@
 <template>
-  <div>
-    <video ref="playerRef"></video>
+  <div class="record-wrap">
+    <div class="record-wrap__video__wrap">
+      <video ref="playerRef"></video>
+    </div>
     <div class="record-btn-wrap">
       <el-button type="primary" @click="handleStart">开启录制</el-button>
       <el-button type="warning" @click="handlePause">暂停录制</el-button>
@@ -88,15 +90,22 @@ const handleDownload = () => {
 }
 </script>
 <style lang="scss" scoped>
-.record-btn-wrap {
-  display: flex;
-  & > div {
-    border: 1px solid #00bd7e;
-    padding: 5px;
-    margin-right: 5px;
-    cursor: pointer;
-    border-radius: 10px;
-    color: #00bd7e;
+.record-wrap {
+  .record-wrap__video__wrap {
+    width: 600px;
+    height: 400px;
+    border: 1px solid #409eff;
+    video {
+      width: 100%;
+      height: 100%;
+    }
   }
 }
+.record-btn-wrap {
+  margin-top: 30px;
+  display: flex;
+}
 </style>
+
+
+

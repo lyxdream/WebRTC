@@ -112,8 +112,6 @@ https://blog.csdn.net/weixin_56455782/article/details/131203637
 https://www.jianshu.com/p/83beaf5be919
 
 需要注意的是，WebRTC 只能在 HTTPS 协议或者 localhost 下使用，如果是 HTTP 协议，会报错。
-
-
 我使用HTMLCanvasElement.captureStream()获取stream，并将其传递给MediaRecorder以将其写入.webm文件。
 
  是的，一般的 api 可以借助adapter来做一些简单的兼容，特殊的我们需要查看它的兼容情况使用

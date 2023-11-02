@@ -1,3 +1,4 @@
+import { Component } from 'vue'
 import 'vue-router'
 
 declare module 'vue-router' {
@@ -7,4 +8,8 @@ declare module 'vue-router' {
     // 每个路由都必须声明
     requiresAuth: boolean
   }
+}
+
+interface DynamicComponentProps {
+  is: string | Component
 }
