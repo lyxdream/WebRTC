@@ -1,7 +1,7 @@
 <template>
   <div class="record-wrap">
     <div class="record-wrap__video__wrap">
-      <video ref="playerRef"></video>
+      <video ref="playerRef" id="video"></video>
     </div>
     <div class="record-btn-wrap">
       <el-button type="primary" @click="handleStart">开启录制</el-button>
@@ -16,30 +16,46 @@
 </template>
 
 <script lang="ts" setup>
+interface mediaRecorderType {
+  onStart: () => Promise<string | void>
+  onPause: () => Promise<any>
+  onResume: () => Promise<any>
+  onStop: () => Promise<any>
+  onReplay: () => void
+  onReset: () => void
+  onDownload: () => void
+}
+
 import { RecordScreen } from './record'
 import { ref, reactive } from 'vue'
 const playerRef = ref()
-// const DEFAULT_MIME_TYPE = 'video/webm; codecs=vp9' //默认的MIME格式
 const state = reactive({
   mediaRecorder: null as null | MediaRecorder,
-  blobs: [] as Blob[]
-})
-const options = {
-  audio: false,
-  video: true
-}
-const recordScreen = new RecordScreen(state.mediaRecorder, {
-  blobs: state.blobs,
-  mediaOption: options
+  blobs: [] as Blob[],
+  recordScreen: {} as mediaRecorderType,
 })
 
-// const mimeType = (type: string) => {
-//   return MediaRecorder.isTypeSupported(type) ? type : 'video/webm'
-// }
+//初始化
+const initRecorder = () => {
+  state.recordScreen = new RecordScreen(state.mediaRecorder, {
+    blobs: state.blobs
+  })
+}
 // 开始录制
 const handleStart = async () => {
-  recordScreen.onStart()
-  // try {
+  if (!state.recordScreen) {
+    initRecorder()
+    console.log(state.recordScreen, '==state.recordScreen')
+    state.recordScreen
+      .onStart()
+      .then(() => {})
+      .catch((e) => {
+        console.log(e)
+      })
+  } else {
+    console.log('正在录制中，是否放弃当前录制，重新录制~~~')
+  }
+
   //   const options = {
   //     audio: false,
   //     video: true
@@ -63,46 +79,61 @@ const handleStart = async () => {
 }
 // 暂停录制
 const handlePause = () => {
-  recordScreen.onPause(() => {})
+  state.recordScreen.onPause()
   // state.mediaRecorder?.pause()
 }
 // 继续录制
 const handleResume = () => {
-  state.mediaRecorder?.resume()
+  state.recordScreen.onResume()
+  // state.mediaRecorder?.resume()
 }
 // 停止录制
 const handleStop = () => {
-  state.mediaRecorder?.stop()
+  // state.mediaRecorder?.stop()
+  state.recordScreen
+    .onStop()
+    .then((res) => {
+      console.log(res, '==onStop')
+    })
+    .catch((err) => {
+      console.log(err, '==err')
+    })
 }
 // 播放录制
 const handleReplay = () => {
-  if (state.blobs.length === 0 || !playerRef.value) {
-    console.log('没有录制文件')
-    return
-  }
-  const blob = new Blob(state.blobs, { type: 'video/webm' })
-  playerRef.value.src = URL.createObjectURL(blob)
-  playerRef.value.play()
+  state.recordScreen.onReplay()
+  // const video = document.querySelector('#video') as HTMLVideoElement
+  // if (state.blobs.length === 0 || !playerRef.value) {
+  //   console.log('没有录制文件')
+  //   return
+  // }
+  // const blob = new Blob(state.blobs, { type: 'video/webm' })
+  // const url = URL.createObjectURL(blob)
+  // console.log(url, '==url')
+  // video.src = url
+  // video.play()
 }
 //重置
 const handleReset = () => {
-  state.blobs = []
-  state.mediaRecorder = null
-  playerRef.value.src = null
+  // state.blobs = []
+  // state.mediaRecorder = null
+  // playerRef.value.src = null
+  state.recordScreen.onReset()
 }
 //下载录制
 const handleDownload = () => {
-  if (!state.blobs.length) {
-    console.log('没有录制文件')
-    return
-  }
-  const blob = new Blob(state.blobs, { type: 'video/webm' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.style.display = 'none'
-  a.download = `录屏_${Date.now()}.webm`
-  a.click()
+  state.recordScreen.onDownload()
+  // if (!state.blobs.length) {
+  //   console.log('没有录制文件')
+  //   return
+  // }
+  // const blob = new Blob(state.blobs, { type: 'video/webm' })
+  // const url = URL.createObjectURL(blob)
+  // const a = document.createElement('a')
+  // a.href = url
+  // a.style.display = 'none'
+  // a.download = `录屏_${Date.now()}.webm`
+  // a.click()
 }
 </script>
 <style lang="scss" scoped>

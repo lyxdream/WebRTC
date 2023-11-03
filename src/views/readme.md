@@ -134,6 +134,12 @@ https://juejin.cn/post/7151932832041058340
 
 
 
+1、JS手写EventEmitter实现方式
+https://blog.csdn.net/qq_37820580/article/details/114145812
+https://www.npmjs.com/package/recordrtc
+https://blog.csdn.net/weixin_42147968/article/details/127598726
+
+
 https://blog.csdn.net/weixin_56455782/article/details/131203637
 https://juejin.cn/post/7280057907055869992?searchId=20231023150615B61C09D90770B98A9B45
 https://juejin.cn/post/7129763930779418654
