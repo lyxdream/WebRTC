@@ -21,76 +21,54 @@ interface mediaRecorderType {
   onPause: () => Promise<any>
   onResume: () => Promise<any>
   onStop: () => Promise<any>
-  onReplay: () => void
+  onReplay: () => Promise<any>
   onReset: () => void
-  onDownload: () => void
+  onDownload: () => Promise<any>
 }
 
-import { RecordScreen } from './record'
+import { RecordRTC } from '../core/RecordRTC'
 import { ref, reactive } from 'vue'
 const playerRef = ref()
 const state = reactive({
-  mediaRecorder: null as null | MediaRecorder,
+  mediaRecorder: {} as mediaRecorderType,
   blobs: [] as Blob[],
-  recordScreen: {} as mediaRecorderType,
+  stream: {} as MediaStream
 })
 
-//初始化
-const initRecorder = () => {
-  state.recordScreen = new RecordScreen(state.mediaRecorder, {
-    blobs: state.blobs
-  })
-}
 // 开始录制
 const handleStart = async () => {
-  if (!state.recordScreen) {
-    initRecorder()
-    console.log(state.recordScreen, '==state.recordScreen')
-    state.recordScreen
-      .onStart()
-      .then(() => {})
-      .catch((e) => {
-        console.log(e)
-      })
-  } else {
-    console.log('正在录制中，是否放弃当前录制，重新录制~~~')
+  const options = {
+    audio: false,
+    video: true
   }
-
-  //   const options = {
-  //     audio: false,
-  //     video: true
-  //   }
-  //   const stream: MediaStream = await navigator.mediaDevices.getDisplayMedia(options)
-  //   // 监听该媒体流中找到的第一个视轨的ended事件
-  //   stream.getVideoTracks()[0].addEventListener('ended', () => {
-  //     console.log('用户中断了屏幕共享~~~')
-  //   })
-  //   state.mediaRecorder = new MediaRecorder(stream, {
-  //     mimeType: mimeType(DEFAULT_MIME_TYPE)
-  //   })
-  //   state.mediaRecorder.addEventListener('dataavailable', (e: BlobEvent) => {
-  //     state.blobs.push(e.data)
-  //   })
-  //   // 500是每隔500ms进行一个保存数据
-  //   state.mediaRecorder?.start(500)
-  // } catch (e) {
-  //   console.log(`屏幕共享失败->${e}`)
-  // }
+  if (Object.keys(state.stream).length > 0) {
+    console.log('正在录制中，是否放弃当前录制，重新录制~~~')
+  } else {
+    try {
+      state.stream = await navigator.mediaDevices.getDisplayMedia(options)
+      state.mediaRecorder = new RecordRTC(state.stream, {})
+      state.mediaRecorder
+        .onStart()
+        .then(() => {})
+        .catch((e) => {
+          console.log(e)
+        })
+    } catch (e) {
+      console.log('屏幕共享失败')
+    }
+  }
 }
 // 暂停录制
 const handlePause = () => {
-  state.recordScreen.onPause()
-  // state.mediaRecorder?.pause()
+  state.mediaRecorder.onPause()
 }
 // 继续录制
 const handleResume = () => {
-  state.recordScreen.onResume()
-  // state.mediaRecorder?.resume()
+  state.mediaRecorder.onResume()
 }
 // 停止录制
 const handleStop = () => {
-  // state.mediaRecorder?.stop()
-  state.recordScreen
+  state.mediaRecorder
     .onStop()
     .then((res) => {
       console.log(res, '==onStop')
@@ -101,7 +79,7 @@ const handleStop = () => {
 }
 // 播放录制
 const handleReplay = () => {
-  state.recordScreen.onReplay()
+  state.mediaRecorder.onReplay()
   // const video = document.querySelector('#video') as HTMLVideoElement
   // if (state.blobs.length === 0 || !playerRef.value) {
   //   console.log('没有录制文件')
@@ -118,11 +96,11 @@ const handleReset = () => {
   // state.blobs = []
   // state.mediaRecorder = null
   // playerRef.value.src = null
-  state.recordScreen.onReset()
+  state.mediaRecorder.onReset()
 }
 //下载录制
 const handleDownload = () => {
-  state.recordScreen.onDownload()
+  state.mediaRecorder.onDownload()
   // if (!state.blobs.length) {
   //   console.log('没有录制文件')
   //   return
