@@ -16,43 +16,36 @@
 </template>
 
 <script lang="ts" setup>
-interface mediaRecorderType {
-  onStart: () => Promise<string | void>
-  onPause: () => Promise<any>
-  onResume: () => Promise<any>
-  onStop: () => Promise<any>
-  onReplay: () => Promise<any>
-  onReset: () => void
-  onDownload: () => Promise<any>
-}
-
 import { RecordRTC } from '../core/RecordRTC'
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 const playerRef = ref()
 const state = reactive({
-  mediaRecorder: {} as mediaRecorderType,
+  mediaRecorder: {} as RecordRTC,
   blobs: [] as Blob[],
   stream: {} as MediaStream
 })
 
+onMounted(() => {
+  // 异步注册时当前组件实例已丢失
+  // 这将不会正常工作
+})
+
 // 开始录制
 const handleStart = async () => {
-  const options = {
-    audio: false,
-    video: true
-  }
+  // const options = {
+  //   audio: false,
+  //   video: true
+  // }
+  // console.log(state.stream, Object.keys(state.stream), '==Object.keys(state.stream)')
+  state.mediaRecorder = new RecordRTC({})
+  state.mediaRecorder.startRecording()
   if (Object.keys(state.stream).length > 0) {
     console.log('正在录制中，是否放弃当前录制，重新录制~~~')
   } else {
     try {
-      state.stream = await navigator.mediaDevices.getDisplayMedia(options)
-      state.mediaRecorder = new RecordRTC(state.stream, {})
-      state.mediaRecorder
-        .onStart()
-        .then(() => {})
-        .catch((e) => {
-          console.log(e)
-        })
+      // state.stream = await navigator.mediaDevices.getDisplayMedia(options)
+      // state.mediaRecorder = new RecordRTC(state.stream, {})
+      // state.mediaRecorder.startRecording()
     } catch (e) {
       console.log('屏幕共享失败')
     }
@@ -60,26 +53,19 @@ const handleStart = async () => {
 }
 // 暂停录制
 const handlePause = () => {
-  state.mediaRecorder.onPause()
+  state.mediaRecorder?.pauseRecording()
 }
 // 继续录制
 const handleResume = () => {
-  state.mediaRecorder.onResume()
+  state.mediaRecorder?.resumeRecording()
 }
 // 停止录制
 const handleStop = () => {
-  state.mediaRecorder
-    .onStop()
-    .then((res) => {
-      console.log(res, '==onStop')
-    })
-    .catch((err) => {
-      console.log(err, '==err')
-    })
+  state.mediaRecorder?.stopRecording()
 }
 // 播放录制
 const handleReplay = () => {
-  state.mediaRecorder.onReplay()
+  state.mediaRecorder?.replayRecording()
   // const video = document.querySelector('#video') as HTMLVideoElement
   // if (state.blobs.length === 0 || !playerRef.value) {
   //   console.log('没有录制文件')
@@ -96,11 +82,11 @@ const handleReset = () => {
   // state.blobs = []
   // state.mediaRecorder = null
   // playerRef.value.src = null
-  state.mediaRecorder.onReset()
+  state.mediaRecorder?.reset()
 }
 //下载录制
 const handleDownload = () => {
-  state.mediaRecorder.onDownload()
+  state.mediaRecorder?.save()
   // if (!state.blobs.length) {
   //   console.log('没有录制文件')
   //   return
