@@ -1,5 +1,5 @@
 import { ConfigOptions, type RecordOptions, RecordingState } from './types'
-import { MEDIA_OPTION, DOWN_LOAD_FILE_NAME, FILE_TYPE, TIMESLICE } from './constants'
+import { DOWN_LOAD_FILE_NAME, FILE_TYPE, TIMESLICE } from './constants'
 import { getConstraints, warningLog, getMimeType } from '../utils/recordRTC'
 
 /**
@@ -18,9 +18,8 @@ export class RecordRTC {
   initRecorder(config: RecordOptions) {
     this.config = {
       type: 'video', // audio, video, canvas, gif
-      mediaOption: MEDIA_OPTION,
-      fileName: DOWN_LOAD_FILE_NAME,
-      fileType: FILE_TYPE,
+      fileName: DOWN_LOAD_FILE_NAME, //下载的文件名称
+      fileType: FILE_TYPE, //下载的文件类型
       timeslice: TIMESLICE, //记录到每个Blob中的毫秒数。如果不包括此参数，则整个媒体持续时间将记录到一个Blob中
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       dataavailable: (blobs: Blob[] | any) => {},
