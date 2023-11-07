@@ -1,46 +1,27 @@
-export enum ConfigOptions {
-  DEFAULT_MIME_TYPE = 'video/webm; codecs=vp9', //默认的MIME格式
-  VIDEO_SELECTOR_NAME = '#video'
-}
-
-export interface mediaOptionType {
-  audio: Boolean
-  video: Boolean
-}
-
-export interface RecordOptions {
+export interface IRecordOptions {
   type?: string
-  mediaOption?: mediaOptionType
   mimeType?: string
-  videoSelectorName?: string
+  selectorName?: string
   fileName?: string
-  fileType?: string
+  fileSuffix?: string
   timeslice?: number
-  dataavailable?: (blob: any) => void
+  ondataavailable?: (blob: any) => void
 }
 
-export enum RecordingState {
+export enum ERecordingState {
   RECORDING = 'recording', // 录制中
   INACTIVE = 'inactive', // 未录制
   STOPPED = 'stopped', //停止录制
   PAUSED = 'paused' //暂停录制
   // destroyed
 }
+
 // inactive: has not been started or it has been stopped.
 //recording: Recording has been started and the UA is capturing data.
 //paused：Recording has been started, then paused, and not yet stopped or resumed.
 //文档：https://w3c.github.io/mediacapture-record/#dom-mediarecorder-state
-// export enum RecordingState {
+// export enum ERecordingState {
 //   'inactive',
 //   'recording',
 //   'paused'
 // }
-export const mimeType = [
-  'video/webm',
-  'audio/webm',
-  'video/webm;codecs=vp8',
-  'video/webm;codecs=daala',
-  'video/webm;codecs=h264',
-  'audio/webm;codecs=opus',
-  'video/mpeg'
-]

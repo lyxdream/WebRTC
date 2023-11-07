@@ -1,6 +1,6 @@
 <template>
   <div class="record-wrap">
-    <div class="record-wrap__video__wrap">
+    <div class="record-wrap__video__wrap" id="video-wrap">
       <video ref="playerRef" id="video"></video>
     </div>
     <div class="record-btn-wrap">
