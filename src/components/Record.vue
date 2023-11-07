@@ -27,31 +27,31 @@ const state = reactive({
 state.mediaRecorder = new RecordRTC({})
 // 开始录制
 const handleStart = async () => {
-  state.mediaRecorder.startRecording()
+  state.mediaRecorder.start()
 }
 // 暂停录制
 const handlePause = () => {
-  state.mediaRecorder?.pauseRecording()
+  state.mediaRecorder.pause()
 }
 // 继续录制
 const handleResume = () => {
-  state.mediaRecorder?.resumeRecording()
+  state.mediaRecorder.resume()
 }
 // 停止录制
 const handleStop = () => {
-  state.mediaRecorder?.stopRecording()
+  state.mediaRecorder.stop()
 }
 // 播放录制
 const handleReplay = () => {
-  state.mediaRecorder?.replayRecording()
+  state.mediaRecorder.replay()
 }
 //重置
 const handleReset = () => {
-  state.mediaRecorder?.reset()
+  state.mediaRecorder.reset()
 }
 //下载录制
 const handleDownload = () => {
-  state.mediaRecorder?.save()
+  state.mediaRecorder.save()
 }
 </script>
 <style lang="scss" scoped>

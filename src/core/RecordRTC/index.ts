@@ -12,10 +12,10 @@ export class RecordRTC {
   blobs: Blob[] | any
   state: string | undefined
   constructor(config: RecordOptions) {
-    this.initRecorder(config)
+    this.init(config)
   }
   //初始化
-  initRecorder(config: RecordOptions) {
+  init(config: RecordOptions) {
     this.config = {
       type: 'video', // audio, video, canvas, gif
       fileName: DOWN_LOAD_FILE_NAME, //下载的文件名称
@@ -31,7 +31,7 @@ export class RecordRTC {
     this.state = '' //当前录制状态
   }
   // 开始录制
-  async startRecording() {
+  async start() {
     if (!this.recordRTC) {
       try {
         const mediaStream: MediaStream = await navigator.mediaDevices.getDisplayMedia(
@@ -42,7 +42,7 @@ export class RecordRTC {
         this.recordRTC.ondataavailable = this.ondataavailable.bind(this)
         // 监听该媒体流中找到的第一个视轨的ended事件
         this.interruptRecording(mediaStream)
-        this.recordRTC?.start(500) //开始录制
+        this.recordRTC?.start(this.config.timeslice) //开始录制
         this.setState(RecordingState.RECORDING) //设置当前录制状态
       } catch (e) {
         throw '屏幕共享失败.......' + e
@@ -52,7 +52,7 @@ export class RecordRTC {
     }
   }
   // 暂停录制
-  pauseRecording() {
+  pause() {
     if (!this.recordRTC) {
       warningLog(this.config)
       return
@@ -64,7 +64,7 @@ export class RecordRTC {
     this.setState(RecordingState.PAUSED) //修改状态
   }
   // 继续录制
-  resumeRecording() {
+  resume() {
     if (!this.recordRTC) {
       warningLog(this.config)
       return
@@ -72,17 +72,17 @@ export class RecordRTC {
     if (this.state === RecordingState.STOPPED) {
       throw '已经结束录制~'
     }
-    this.recordRTC?.resume()
+    this.recordRTC.resume()
     this.setState(RecordingState.RECORDING)
   }
   // 停止录制
-  stopRecording(callback?: (arg: MediaRecorder | null | undefined) => void) {
+  stop(callback?: (arg: MediaRecorder | null | undefined) => void) {
     callback = callback || function () {}
     if (!this.recordRTC) {
       warningLog(this.config)
       throw '没有需要停止的录制视频'
     }
-    this.recordRTC?.stop()
+    this.recordRTC.stop()
     setTimeout(() => {
       callback && callback(this.recordRTC)
     }, 1000)
@@ -90,7 +90,7 @@ export class RecordRTC {
   }
 
   // 播放录制
-  replayRecording() {
+  replay() {
     if (!this.recordRTC) {
       warningLog(this.config)
       return
