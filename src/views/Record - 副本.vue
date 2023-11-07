@@ -17,14 +17,19 @@
 
 <script lang="ts" setup>
 import { RecordRTC } from '../core/RecordRTC'
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 const playerRef = ref()
 const state = reactive({
   mediaRecorder: {} as RecordRTC,
   blobs: [] as Blob[],
   stream: {} as MediaStream
 })
-state.mediaRecorder = new RecordRTC({})
+
+onMounted(() => {
+  // 异步注册时当前组件实例已丢失
+  // 这将不会正常工作
+  state.mediaRecorder = new RecordRTC({})
+})
 // 开始录制
 const handleStart = async () => {
   state.mediaRecorder.startRecording()
@@ -44,14 +49,38 @@ const handleStop = () => {
 // 播放录制
 const handleReplay = () => {
   state.mediaRecorder?.replayRecording()
+  // const video = document.querySelector('#video') as HTMLVideoElement
+  // if (state.blobs.length === 0 || !playerRef.value) {
+  //   console.log('没有录制文件')
+  //   return
+  // }
+  // const blob = new Blob(state.blobs, { type: 'video/webm' })
+  // const url = URL.createObjectURL(blob)
+  // console.log(url, '==url')
+  // video.src = url
+  // video.play()
 }
 //重置
 const handleReset = () => {
+  // state.blobs = []
+  // state.mediaRecorder = null
+  // playerRef.value.src = null
   state.mediaRecorder?.reset()
 }
 //下载录制
 const handleDownload = () => {
   state.mediaRecorder?.save()
+  // if (!state.blobs.length) {
+  //   console.log('没有录制文件')
+  //   return
+  // }
+  // const blob = new Blob(state.blobs, { type: 'video/webm' })
+  // const url = URL.createObjectURL(blob)
+  // const a = document.createElement('a')
+  // a.href = url
+  // a.style.display = 'none'
+  // a.download = `录屏_${Date.now()}.webm`
+  // a.click()
 }
 </script>
 <style lang="scss" scoped>

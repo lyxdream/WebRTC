@@ -14,9 +14,18 @@ export interface RecordOptions {
   mimeType?: string
   videoSelectorName?: string
   fileName?: string
-  // ondataavailable: function(blob) {},
+  fileType?: string
+  timeslice?: number
+  dataavailable?: (blob: any) => void
 }
 
+export enum RecordingState {
+  RECORDING = 'recording', // 录制中
+  INACTIVE = 'inactive', // 未录制
+  STOPPED = 'stopped', //停止录制
+  PAUSED = 'paused' //暂停录制
+  // destroyed
+}
 // inactive: has not been started or it has been stopped.
 //recording: Recording has been started and the UA is capturing data.
 //paused：Recording has been started, then paused, and not yet stopped or resumed.
@@ -26,15 +35,6 @@ export interface RecordOptions {
 //   'recording',
 //   'paused'
 // }
-
-export enum RecordingState {
-  RECORDING = 'recording', // 录制中
-  INACTIVE = 'inactive', // 未录制
-  STOPPED = 'stopped', //停止录制
-  PAUSED = 'paused' //暂停录制
-  // destroyed
-}
-
 export const mimeType = [
   'video/webm',
   'audio/webm',
