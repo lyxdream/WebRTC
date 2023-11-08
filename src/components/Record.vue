@@ -1,7 +1,7 @@
 <template>
   <div class="record-wrap">
-    <div class="record-wrap__video__wrap" id="video-wrap">
-      <video ref="playerRef" id="video"></video>
+    <div class="video-wrap record-wrap__video__wrap">
+      <!-- <video ref="playerRef" id="video"></video> -->
     </div>
     <div class="record-btn-wrap">
       <el-button type="primary" @click="handleStart">开启录制</el-button>
@@ -17,20 +17,26 @@
 
 <script lang="ts" setup>
 import { RecordRTC } from '../core/RecordRTC'
-import { ref, reactive } from 'vue'
-const playerRef = ref()
+import { reactive, onMounted } from 'vue'
+// const playerRef = ref()
 const state = reactive({
   mediaRecorder: {} as RecordRTC,
   blobs: [] as Blob[],
   stream: {} as MediaStream
 })
-state.mediaRecorder = new RecordRTC({})
+
+onMounted(() => {
+  state.mediaRecorder = new RecordRTC({})
+})
+
 // 开始录制
 const handleStart = async () => {
+  console.log(state.mediaRecorder, '== state.mediaRecorder')
   state.mediaRecorder.start()
 }
 // 暂停录制
 const handlePause = () => {
+  console.log(state.mediaRecorder)
   state.mediaRecorder.pause()
 }
 // 继续录制
@@ -60,10 +66,6 @@ const handleDownload = () => {
     width: 600px;
     height: 400px;
     border: 1px solid #409eff;
-    video {
-      width: 100%;
-      height: 100%;
-    }
   }
 }
 .record-btn-wrap {
@@ -71,6 +73,13 @@ const handleDownload = () => {
   display: flex;
 }
 </style>
-
+<style lang="scss">
+.video-wrap {
+  video {
+    width: 600px;
+    height: 400px;
+  }
+}
+</style>
 
 

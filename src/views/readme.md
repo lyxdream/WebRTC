@@ -151,3 +151,13 @@ https://juejin.cn/post/7151932832041058340#heading-4
 //inactive 继续录制
 //recording ==mediaRecorder.state
 //index.ts:55 paused ==mediaRecorder.state
+
+<!-- // export const MIME_TYPE_LIST = [
+// 'video/webm',
+// 'audio/webm',
+// 'video/webm;codecs=vp8',
+// 'video/webm;codecs=daala',
+// 'video/webm;codecs=h264',
+// 'audio/webm;codecs=opus',
+// 'video/mpeg'
+// ] -->
