@@ -10,7 +10,10 @@ import {
 
 /**
  * 1、未开始录制，暂停、继续、结束、播放、重置、下载都没法触发（给相关提示）
- * 2、结束录制后，暂停和继续录制功能将没法触发（提示已经结束录制）
+ * 2、结束录制后，暂停和继续录制功能将没法触发（提示已经结束录制），同时onstop监听事件也会触发
+ * 3、重置内容之后，会结束录制，但是不会销毁当前实例，只有销毁事件才会销毁当前实例
+ * 4、关闭自带的屏幕共享之后会触发onInterruptRecording和onstop事件
+ * 5、开启录制的时候判断是否已经结束，已经结束录制再开始录制
  */
 export class RecordRTC {
   config!: IRecordOptions
@@ -154,6 +157,9 @@ export class RecordRTC {
   }
   //重置
   reset() {
+    if (!this.blobs.length) {
+      throw '没有录制文件'
+    }
     this.blobs = []
     this.setState = ''
     this.stream = null
@@ -221,6 +227,10 @@ export class RecordRTC {
     if (typeof onstop === 'function') {
       this.config.onstop!(ev)
     }
+    console.log(
+      '%c 结束录制啦 onstop~~~~',
+      'color: #ffffff; background: #409eff;border-radius: 10px; padding: 4px 10px;'
+    )
   }
   //监听当发生错误时，错误事件会被激发
   onerror(ev: Event): any {
