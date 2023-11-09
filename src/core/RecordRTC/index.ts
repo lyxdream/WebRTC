@@ -1,22 +1,12 @@
-import { type IRecordOptions, ERecordingState, EMimeTypeList } from './types'
+import { type IRecordOptions, ERecordingState, EMimeTypeList, TEventNameList } from './types'
 import {
   DOWN_LOAD_FILE_NAME,
   FILE_SUFFIX,
   TIME_SLICE,
   VIDEO_SELECTOR_NAME,
-  DEFAULT_BITS_PER_SECOND
+  DEFAULT_BITS_PER_SECOND,
+  eventList
 } from './constants'
-
-// const eventList = ['error', 'pause', 'resume', 'start', 'stop', 'dataavailable']
-const eventList = ['error']
-
-enum EEventNameList {
-  error,
-  pause,
-  resume,
-  start,
-  stop
-}
 
 /**
  * 1、未开始录制，暂停、继续、结束、播放、重置、下载都没法触发（给相关提示）
@@ -73,21 +63,10 @@ export class RecordRTC {
         )
         this.recordRTC = new MediaRecorder(mediaStream, this.config) //当前录制屏幕的媒体流
         this.stream = this.recordRTC.stream
-        // type FilterOutReadonly<T> = { -readonly [K in keyof T]: T[K] }
-        type FilterOutReadonly<T> = {
-          [K in keyof T as T[K] extends { readonly [P in keyof T[K]]: T[K][P] } ? never : K]: T[K]
-        }
-        eventList.forEach((item) => {
-          type name = `onerror`
-          type a = FilterOutReadonly<MediaRecorder>
-          type UnionType = keyof a
-          type ExtractedType = Extract<UnionType, name>
-          const filterName = `on${item}` as ExtractedType
-          this.recordRTC![filterName] = this[filterName].bind(this)
-        })
-        // this.recordRTC!['onerror'] = this['onerror'].bind(this)
         // dataavailable当 recordRTC 将媒体数据传递到你的应用程序以供使用时，将触发该事件
-        // this.recordRTC.ondataavailable = this.ondataavailable.bind(this)
+        eventList.forEach((item: TEventNameList) => {
+          this.recordRTC![item] = this[item].bind(this) as any
+        })
         // 监听该媒体流中找到的第一个视轨的ended事件
         this.onInterruptRecording(mediaStream)
         this.recordRTC?.start(this.config.timeslice) //开始录制
@@ -205,26 +184,30 @@ export class RecordRTC {
     const url = URL.createObjectURL(blob)
     return url
   }
-
+  //监听开始事件
+  onstart(ev: Event): any {
+    this.config.onstart!(ev)
+  }
   //MediaRecorder 将媒体数据传递到你的应用程序以供使用时，将触发该事件
-  ondataavailable(e: BlobEvent) {
+  ondataavailable(e: BlobEvent): any {
     this.blobs.push(e.data)
     this.config.ondataavailable!(this.blobs)
   }
-  onerror(ev: Event) {
-    console.log(ev, '==e: BlobEvent')
+  //监听暂停事件
+  onpause(ev: Event): any {
+    this.config.onpause!(ev)
   }
-  onpause(ev: Event) {
-    console.log(ev, '==e: Event')
+  //监听继续事件
+  onresume(ev: Event): any {
+    this.config.onresume!(ev)
   }
-  onresume(ev: Event) {
-    console.log(ev, '==e: Event')
+  //监听结束事件
+  onstop(ev: Event): any {
+    this.config.onstop!(ev)
   }
-  onstart(ev: Event) {
-    console.log(ev, '==e: Event')
-  }
-  onstop(ev: Event) {
-    console.log(ev, '==e: Event')
+  //监听当发生错误时，错误事件会被激发
+  onerror(ev: Event): any {
+    this.config.onerror!(ev)
   }
   //中断录制
   onInterruptRecording(stream: MediaStream) {
@@ -233,7 +216,6 @@ export class RecordRTC {
       throw '用户中断了屏幕共享~~~'
     })
   }
-  onEvents() {}
   //获取当前录制的流
   get getBlob() {
     if (!this.recordRTC) {
