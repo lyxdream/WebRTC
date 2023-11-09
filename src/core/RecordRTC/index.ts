@@ -3,7 +3,7 @@ import {
   DOWN_LOAD_FILE_NAME,
   FILE_SUFFIX,
   TIME_SLICE,
-  VIDEO_SELECTOR_NAME,
+  ELEMENT_CLASS,
   DEFAULT_BITS_PER_SECOND,
   eventList
 } from './constants'
@@ -14,7 +14,7 @@ import {
  */
 export class RecordRTC {
   config!: IRecordOptions
-  recordRTC: MediaRecorder | null | undefined
+  recordRTC: MediaRecorder | undefined
   blobs: Blob[] | any
   state: string | undefined
   stream: MediaStream | null
@@ -33,7 +33,7 @@ export class RecordRTC {
   private defaultConfig() {
     return {
       type: 'video', // audio, video, canvas, gif
-      selectorName: VIDEO_SELECTOR_NAME, //加载元素的盒子的选择器名称
+      elementClass: ELEMENT_CLASS, //加载元素的盒子的选择器名称
       fileName: DOWN_LOAD_FILE_NAME, //下载的文件名称
       fileSuffix: FILE_SUFFIX, //下载的文件类型
       timeslice: TIME_SLICE, //记录到每个Blob中的毫秒数。如果不包括此参数，则整个媒体持续时间将记录到一个Blob中
@@ -56,7 +56,8 @@ export class RecordRTC {
   }
   // 开始录制
   async start() {
-    if (!this.recordRTC) {
+    //如果已经结束录制或者未开始录制
+    if (!this.recordRTC || this.getState == ERecordingState.STOPPED) {
       try {
         const mediaStream: MediaStream = await navigator.mediaDevices.getDisplayMedia(
           this.getConstraints(this.config.type)
@@ -75,7 +76,7 @@ export class RecordRTC {
         throw '屏幕共享失败.......' + e
       }
     } else {
-      throw '当前正在录制中.......'
+      throw '当前有正在录制的视频.......'
     }
   }
   // 暂停录制
@@ -117,6 +118,10 @@ export class RecordRTC {
       callback && callback(this.recordRTC)
     }, 1000)
     this.setState = ERecordingState.STOPPED
+    console.log(
+      '%c 结束录制啦~~~~',
+      'color: #ffffff; background: #409eff;border-radius: 10px; padding: 4px 10px;'
+    )
   }
 
   // 播放录制
@@ -136,10 +141,6 @@ export class RecordRTC {
   }
   //保存录制
   save() {
-    if (!this.recordRTC) {
-      this.warningLog()
-      return
-    }
     if (!this.blobs.length) {
       throw '没有录制文件'
     }
@@ -153,25 +154,24 @@ export class RecordRTC {
   }
   //重置
   reset() {
-    if (!this.recordRTC) {
-      this.warningLog()
-      return
-    }
-    //如果正在录制中
-    if (this.state === ERecordingState.RECORDING) {
-      throw '请先停止当前录制~'
-    }
     this.blobs = []
-    this.recordRTC = null
+    this.setState = ''
+    this.stream = null
     const { type = 'video' } = this.config
     const element = document.querySelector(type) as HTMLElement & HTMLVideoElement
     if (type === 'video') {
       element.src = ''
     }
     this.setState = ERecordingState.INACTIVE
+    this.stop()
+    console.log(
+      '%c 清空设置啦~~~~',
+      'color: #ffffff; background: #409eff;border-radius: 10px; padding: 4px 10px;'
+    )
   }
   //销毁事件
   destroy() {
+    this.recordRTC = undefined
     this.reset()
     this.removeEle()
     this.setState = ERecordingState.DESTROYED
@@ -181,33 +181,53 @@ export class RecordRTC {
     const blob = new Blob(this.blobs, {
       type: this.getMimeType(this.config.mimeType!)
     })
+    console.log(blob, '==blob')
     const url = URL.createObjectURL(blob)
     return url
   }
   //监听开始事件
   onstart(ev: Event): any {
-    this.config.onstart!(ev)
+    const { onstart } = this.config
+    if (typeof onstart === 'function') {
+      this.config.onstart!(ev)
+    }
   }
   //MediaRecorder 将媒体数据传递到你的应用程序以供使用时，将触发该事件
   ondataavailable(e: BlobEvent): any {
     this.blobs.push(e.data)
-    this.config.ondataavailable!(this.blobs)
+    const { ondataavailable } = this.config
+    if (typeof ondataavailable === 'function') {
+      this.config.ondataavailable!(this.blobs)
+    }
   }
   //监听暂停事件
   onpause(ev: Event): any {
-    this.config.onpause!(ev)
+    const { onpause } = this.config
+    if (typeof onpause === 'function') {
+      this.config.onpause!(ev)
+    }
   }
   //监听继续事件
   onresume(ev: Event): any {
-    this.config.onresume!(ev)
+    const { onresume } = this.config
+    if (typeof onresume === 'function') {
+      this.config.onresume!(ev)
+    }
   }
   //监听结束事件
   onstop(ev: Event): any {
-    this.config.onstop!(ev)
+    const { onstop } = this.config
+    this.stop()
+    if (typeof onstop === 'function') {
+      this.config.onstop!(ev)
+    }
   }
   //监听当发生错误时，错误事件会被激发
   onerror(ev: Event): any {
-    this.config.onerror!(ev)
+    const { onerror } = this.config
+    if (typeof onerror === 'function') {
+      this.config.onerror!(ev)
+    }
   }
   //中断录制
   onInterruptRecording(stream: MediaStream) {
@@ -255,16 +275,16 @@ export class RecordRTC {
   //创建元素
   private createEle() {
     const { type = 'video' } = this.config
-    const selectorName = this.config.selectorName as string
-    const wrap = document.querySelector(selectorName) as HTMLElement
+    const elementClass = this.config.elementClass as string
+    const wrap = document.querySelector(elementClass) as HTMLElement
     const element = document.createElement(type) as HTMLElement
     wrap.appendChild(element)
   }
   //移除元素
   private removeEle() {
     const { type = 'video' } = this.config
-    const selectorName = this.config.selectorName as string
-    const wrap = document.querySelector(selectorName) as HTMLElement
+    const elementClass = this.config.elementClass as string
+    const wrap = document.querySelector(elementClass) as HTMLElement
     const element = document.querySelector(type) as HTMLElement
     wrap.removeChild(element)
   }

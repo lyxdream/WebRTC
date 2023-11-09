@@ -1,6 +1,6 @@
 export interface IRecordOptions {
   type?: string
-  selectorName?: string
+  elementClass?: string
   fileName?: string
   fileSuffix?: string
   timeslice?: number
@@ -34,6 +34,7 @@ export enum EMimeTypeList {
   VIDEO_MPEG = 'video/mpeg'
 }
 
+//绑定的事件类型
 export type TEventNameList =
   | 'onerror'
   | 'onpause'

@@ -17,6 +17,7 @@
 
 <script lang="ts" setup>
 import { RecordRTC } from '../core/RecordRTC'
+import { ERecordingState } from '../core/RecordRTC/types'
 import { reactive, onMounted } from 'vue'
 // const playerRef = ref()
 const state = reactive({
@@ -31,12 +32,10 @@ onMounted(() => {
 
 // 开始录制
 const handleStart = async () => {
-  console.log(state.mediaRecorder, '== state.mediaRecorder')
   state.mediaRecorder.start()
 }
 // 暂停录制
 const handlePause = () => {
-  console.log(state.mediaRecorder)
   state.mediaRecorder.pause()
 }
 // 继续录制
@@ -53,6 +52,10 @@ const handleReplay = () => {
 }
 //重置
 const handleReset = () => {
+  // //如果正在录制中
+  if (state.mediaRecorder.getState === ERecordingState.RECORDING) {
+    throw '请先停止当前录制~'
+  }
   state.mediaRecorder.reset()
 }
 //下载录制
